@@ -10,67 +10,75 @@ export interface AIExplanationResult {
 
 // --- Configuration & Helpers ---
 
-const getGoogleKey = (): string => {
-    // 1. Try standard process.env (Explicit access is required for many bundlers like Webpack/Vite to perform replacement)
+const checkKeys = (candidates: string[]): string => {
+    // 1. Check process.env (Node/Webpack/Standard)
     try {
         if (typeof process !== 'undefined' && process.env) {
-            // @ts-ignore
-            if (process.env.GOOGLE_API_KEY) return process.env.GOOGLE_API_KEY;
-            // @ts-ignore
-            if (process.env.API_KEY) return process.env.API_KEY;
-            // @ts-ignore
-            if (process.env.REACT_APP_GOOGLE_API_KEY) return process.env.REACT_APP_GOOGLE_API_KEY;
-            // @ts-ignore
-            if (process.env.VITE_GOOGLE_API_KEY) return process.env.VITE_GOOGLE_API_KEY;
+            for (const key of candidates) {
+                // @ts-ignore
+                const val = process.env[key];
+                if (val && typeof val === 'string' && val.length > 0 && !val.startsWith("Paste")) return val;
+            }
         }
     } catch (e) {}
 
-    // 2. Try import.meta.env (Vite/Modern ESM)
+    // 2. Check import.meta.env (Vite/ESM)
     try {
         // @ts-ignore
         if (typeof import.meta !== 'undefined' && import.meta.env) {
-            // @ts-ignore
-            if (import.meta.env.GOOGLE_API_KEY) return import.meta.env.GOOGLE_API_KEY;
-            // @ts-ignore
-            if (import.meta.env.API_KEY) return import.meta.env.API_KEY;
-            // @ts-ignore
-            if (import.meta.env.VITE_GOOGLE_API_KEY) return import.meta.env.VITE_GOOGLE_API_KEY;
+            for (const key of candidates) {
+                // @ts-ignore
+                const val = import.meta.env[key];
+                if (val && typeof val === 'string' && val.length > 0 && !val.startsWith("Paste")) return val;
+            }
+        }
+    } catch (e) {}
+
+    // 3. Check window/global scope (Last resort for manual injection)
+    try {
+        if (typeof window !== 'undefined') {
+            for (const key of candidates) {
+                // @ts-ignore
+                const val = (window as any)[key];
+                if (val && typeof val === 'string' && val.length > 0) return val;
+            }
         }
     } catch (e) {}
 
     return "";
 };
 
+const getGoogleKey = (): string => {
+    return checkKeys([
+        "GOOGLE_API_KEY", 
+        "API_KEY", 
+        "VITE_GOOGLE_API_KEY", 
+        "REACT_APP_GOOGLE_API_KEY", 
+        "NEXT_PUBLIC_GOOGLE_API_KEY",
+        "VITE_API_KEY",
+        "REACT_APP_API_KEY"
+    ]);
+};
+
 const getOpenAIKey = (): string => {
-    try {
-        if (typeof process !== 'undefined' && process.env) {
-            // @ts-ignore
-            if (process.env.OPENAI_API_KEY) return process.env.OPENAI_API_KEY;
-            // @ts-ignore
-            if (process.env.REACT_APP_OPENAI_API_KEY) return process.env.REACT_APP_OPENAI_API_KEY;
-            // @ts-ignore
-            if (process.env.VITE_OPENAI_API_KEY) return process.env.VITE_OPENAI_API_KEY;
-        }
-    } catch (e) {}
-
-    try {
-        // @ts-ignore
-        if (typeof import.meta !== 'undefined' && import.meta.env) {
-            // @ts-ignore
-            if (import.meta.env.OPENAI_API_KEY) return import.meta.env.OPENAI_API_KEY;
-            // @ts-ignore
-            if (import.meta.env.VITE_OPENAI_API_KEY) return import.meta.env.VITE_OPENAI_API_KEY;
-        }
-    } catch (e) {}
-
-    return "";
+    return checkKeys([
+        "OPENAI_API_KEY", 
+        "VITE_OPENAI_API_KEY", 
+        "REACT_APP_OPENAI_API_KEY",
+        "NEXT_PUBLIC_OPENAI_API_KEY"
+    ]);
 };
 
 // Determine active provider based on keys
 const getActiveProvider = () => {
-    if (getGoogleKey()) return 'GEMINI';
-    if (getOpenAIKey()) return 'OPENAI';
-    console.warn("AI Service: No valid API keys found. Checked GOOGLE_API_KEY, API_KEY, and OPENAI_API_KEY.");
+    const gKey = getGoogleKey();
+    if (gKey) return 'GEMINI';
+    
+    const oKey = getOpenAIKey();
+    if (oKey) return 'OPENAI';
+    
+    console.warn("AI Service: No valid API keys found. Please check your .env file or environment variables.");
+    console.warn("Checked for: GOOGLE_API_KEY, API_KEY, OPENAI_API_KEY (and VITE_/REACT_APP_ prefixes)");
     return null;
 };
 
@@ -333,7 +341,7 @@ export const getAIExplanation = async (question: Question, userAnswer?: string |
     const provider = getActiveProvider();
     
     if (!provider) {
-        return { text: "AI features are disabled. Please configure a valid Google Gemini or OpenAI API Key in your environment variables." };
+        return { text: "AI features are disabled. No valid API Key found. Please check your environment variables or browser console for details." };
     }
 
     try {
@@ -355,7 +363,7 @@ export const getAIStudyPlan = async (answers: UserAnswer[]) => {
         return {
             overallAssessment: "AI Study Plan Unavailable",
             topWeaknesses: [],
-            studyStrategy: ["To enable AI analysis, please configure a valid API Key."],
+            studyStrategy: ["To enable AI analysis, please configure a valid API Key in your environment."],
             encouragement: "Keep studying!"
         };
     }
@@ -389,7 +397,7 @@ export const getAIContextualAnalysis = async (answers: UserAnswer[]) => {
     const provider = getActiveProvider();
 
     if (!provider) {
-        return "Contextual Analysis is disabled. Please provide an API Key.";
+        return "Contextual Analysis is disabled. No valid API Key found. Check browser console logs for details.";
     }
 
     try {
