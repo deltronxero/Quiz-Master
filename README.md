@@ -28,7 +28,7 @@ A high-performance educational tool designed to transform raw SQLite question ba
     *   Drag-and-Drop Matching (`[MATCH]`)
 *   **Simulation Personas:** Built-in developer tools to simulate user archetypes (e.g., "The Imposter," "The Overconfident," "Domain Specialist") to stress-test analytics.
 
-### 🤖 AI-Powered (Google Gemini)
+### 🤖 AI-Powered (Google Gemini or Chat GPT)
 *   **Deep Explanations:** Generates "Plain English" simplifications and mnemonic hooks for complex questions.
 *   **Real-Time Verification:** Uses Google Search grounding to verify if database answers match current standards (e.g., NIST, ISO changes) and provides citation links.
 *   **Strategic Roadmaps:** Analyzes session performance to build a structured JSON study plan.
@@ -41,7 +41,7 @@ A high-performance educational tool designed to transform raw SQLite question ba
 ### Prerequisites
 *   Node.js (v18+)
 *   npm or yarn
-*   A Google Gemini API Key (for AI features)
+*   A Google Gemini or Chat GPT API Key (for AI features)
 
 ### Installation (All steps should be done in Powershell with admin rights
 
@@ -65,17 +65,15 @@ A high-performance educational tool designed to transform raw SQLite question ba
    Set-ExecutionPolicy -ExecutionPolicy Restricted -Scope CurrentUser
    ```
    
-6.  **Configure Environment (required, sorry)**
-    Create a `.env` file in the root directory:
-    ```env
-    API_KEY=your_google_gemini_api_key_here
-    ```
+6.  **Configure Environment (Optional)**
 
-7.  **Run the application**
+    If you want, Modify the `.env` file and add an API key for AI feedback (supports Google Gemini or Chat GPT)
+
+8.  **Run the application**
     ```bash
     npm start
     ```
-8. **Open [http://localhost:3000](http://localhost:3000) to view the app in your browser.**
+9. **Open [http://localhost:3000](http://localhost:3000) to view the app in your browser.**
 
 ---
 
@@ -180,7 +178,7 @@ Located in the specific "DevTools" menu (Wrench icon) inside the Quiz view.
 ## ⚠️ Troubleshooting
 
 **App doesn't load after navigating to http://localhost:3000**
-*   Ensure you've entered your Gemini API key into the .env.local file
+*   Ensure you've entered your Gemini or Chat GPT API key into the .env file
 
 **"Database is empty" error:**
 *   Ensure your SQLite file has a table.
