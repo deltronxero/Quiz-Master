@@ -10,29 +10,61 @@ export interface AIExplanationResult {
 
 // --- Configuration & Helpers ---
 
-// Helper to safely access env vars across different bundlers (Vite, Webpack, etc.)
-const getEnv = (key: string): string => {
-  try {
-    // Standard Node/Webpack/Parcel
-    if (typeof process !== 'undefined' && process.env && process.env[key]) {
-      return process.env[key];
-    }
-  } catch (e) { }
+const getGoogleKey = (): string => {
+    // 1. Try standard process.env (Explicit access is required for many bundlers like Webpack/Vite to perform replacement)
+    try {
+        if (typeof process !== 'undefined' && process.env) {
+            // @ts-ignore
+            if (process.env.GOOGLE_API_KEY) return process.env.GOOGLE_API_KEY;
+            // @ts-ignore
+            if (process.env.API_KEY) return process.env.API_KEY;
+            // @ts-ignore
+            if (process.env.REACT_APP_GOOGLE_API_KEY) return process.env.REACT_APP_GOOGLE_API_KEY;
+            // @ts-ignore
+            if (process.env.VITE_GOOGLE_API_KEY) return process.env.VITE_GOOGLE_API_KEY;
+        }
+    } catch (e) {}
 
-  try {
-    // Vite / Modern ESM
-    // @ts-ignore
-    if (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env[key]) {
-      // @ts-ignore
-      return import.meta.env[key];
-    }
-  } catch (e) { }
+    // 2. Try import.meta.env (Vite/Modern ESM)
+    try {
+        // @ts-ignore
+        if (typeof import.meta !== 'undefined' && import.meta.env) {
+            // @ts-ignore
+            if (import.meta.env.GOOGLE_API_KEY) return import.meta.env.GOOGLE_API_KEY;
+            // @ts-ignore
+            if (import.meta.env.API_KEY) return import.meta.env.API_KEY;
+            // @ts-ignore
+            if (import.meta.env.VITE_GOOGLE_API_KEY) return import.meta.env.VITE_GOOGLE_API_KEY;
+        }
+    } catch (e) {}
 
-  return "";
+    return "";
 };
 
-const getGoogleKey = () => getEnv("GOOGLE_API_KEY") || getEnv("API_KEY");
-const getOpenAIKey = () => getEnv("OPENAI_API_KEY");
+const getOpenAIKey = (): string => {
+    try {
+        if (typeof process !== 'undefined' && process.env) {
+            // @ts-ignore
+            if (process.env.OPENAI_API_KEY) return process.env.OPENAI_API_KEY;
+            // @ts-ignore
+            if (process.env.REACT_APP_OPENAI_API_KEY) return process.env.REACT_APP_OPENAI_API_KEY;
+            // @ts-ignore
+            if (process.env.VITE_OPENAI_API_KEY) return process.env.VITE_OPENAI_API_KEY;
+        }
+    } catch (e) {}
+
+    try {
+        // @ts-ignore
+        if (typeof import.meta !== 'undefined' && import.meta.env) {
+            // @ts-ignore
+            if (import.meta.env.OPENAI_API_KEY) return import.meta.env.OPENAI_API_KEY;
+            // @ts-ignore
+            if (import.meta.env.VITE_OPENAI_API_KEY) return import.meta.env.VITE_OPENAI_API_KEY;
+        }
+    } catch (e) {}
+
+    return "";
+};
 
 // Determine active provider based on keys
 const getActiveProvider = () => {
@@ -278,7 +310,7 @@ const openAIDriver = {
           Provide:
           1. "The Root Misconception"
           2. "Evidence" (Reference 2-3 specific questions)
-          3. "The 'Mental Pivot'" (Shift in thinking required)
+          3. "The 'Mental Pivot'": A specific shift in thinking required to resolve this pattern.
           
           Format with clean, professional Markdown. Bold for emphasis.
         `;
