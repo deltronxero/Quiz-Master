@@ -47,7 +47,7 @@ A high-performance educational tool designed to transform raw SQLite question ba
 
 1.  **Clone the repository**
     ```bash
-    git clone https://github.com/yourusername/quiz-master.git
+    git clone https://github.com/NM-Security-Projects/Quiz-Master-Public.git
     cd quiz-master
     ```
     
