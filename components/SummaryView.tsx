@@ -1,10 +1,10 @@
 
 import React, { useState, useMemo } from 'react';
 import { UserAnswer, GroundingLink } from '../types';
-import { CheckCircle2, XCircle, RotateCcw, AlertCircle, ChevronDown, ChevronUp, ArrowRight, SkipForward, Folder, FolderOpen, BrainCircuit, Sparkles, Loader2, Target, ShieldAlert, ShieldCheck, Microscope, Info, Filter, Bookmark, Hash, ListChecks, BookOpen, GraduationCap, TrendingUp, Lightbulb, Download, FileText, Check, Copy, Activity, Flag, Globe, ExternalLink } from 'lucide-react';
+import { CheckCircle2, XCircle, RotateCcw, AlertCircle, ChevronDown, ChevronUp, ArrowRight, SkipForward, Folder, FolderOpen, BrainCircuit, Sparkles, Loader2, Target, ShieldAlert, ShieldCheck, Microscope, Info, Filter, Bookmark, Hash, ListChecks, BookOpen, GraduationCap, TrendingUp, Lightbulb, Download, FileText, Check, Copy, Activity, Flag, Globe, ExternalLink, Key } from 'lucide-react';
 import { PerformanceAnalysis } from './PerformanceAnalysis';
 import { ChapterAnalysis } from './ChapterAnalysis';
-import { getAIStudyPlan, getAIContextualAnalysis, getAIExplanation } from '../services/aiService';
+import { getAIStudyPlan, getAIContextualAnalysis, getAIExplanation, saveApiKey } from '../services/aiService';
 import { isMatch, parseMatchConfiguration, cleanMatchText } from '../utils/questionParser';
 
 interface SummaryViewProps {
@@ -78,6 +78,10 @@ export const SummaryView: React.FC<SummaryViewProps> = ({ answers, onRestart, is
   const [copiedMap, setCopiedMap] = useState<Record<string | number, boolean>>({});
   const [copiedIdMap, setCopiedIdMap] = useState<Record<string | number, boolean>>({});
 
+  // Key Entry State
+  const [showKeyInput, setShowKeyInput] = useState(false);
+  const [manualKey, setManualKey] = useState("");
+
   const filteredAnswersList = useMemo(() => {
     return answers.filter(a => {
         if (activeFilter === 'all') return true;
@@ -109,22 +113,44 @@ export const SummaryView: React.FC<SummaryViewProps> = ({ answers, onRestart, is
   const handleGenerateStudyPlan = async () => {
     setIsAiPlanLoading(true);
     const plan = await getAIStudyPlan(answers);
+    
+    // Check for API Key failure based on return value structure
+    if (plan.encouragement && plan.encouragement.includes("API Key")) {
+        setShowKeyInput(true);
+    }
+    
     setAiPlan(plan);
     setIsAiPlanLoading(false);
   };
 
   const handleGenerateContextAnalysis = async () => {
     setIsContextLoading(true);
-    // If we've already generated an error or analysis, clear it to re-try
     setContextualAnalysis(null);
     const analysis = await getAIContextualAnalysis(answers);
+    
+    // Check if the returned string indicates a missing key
+    if (analysis.includes("No valid API Key")) {
+        setShowKeyInput(true);
+    }
+
     setContextualAnalysis(analysis);
     setIsContextLoading(false);
+  };
+
+  const handleSaveKey = () => {
+      if (manualKey.trim().length > 0) {
+          saveApiKey('GEMINI', manualKey.trim());
+          setShowKeyInput(false);
+          setManualKey("");
+      }
   };
 
   const handleAskAiForAnswer = async (ans: UserAnswer) => {
       setIsAiLoadingMap(prev => ({...prev, [ans.question.id]: true}));
       const result = await getAIExplanation(ans.question, ans.selectedOption);
+      if (result.text.includes("No valid API Key")) {
+          setShowKeyInput(true);
+      }
       ans.aiExplanation = result.text;
       ans.aiGroundingLinks = result.links;
       setIsAiLoadingMap(prev => ({...prev, [ans.question.id]: false}));
@@ -361,6 +387,39 @@ export const SummaryView: React.FC<SummaryViewProps> = ({ answers, onRestart, is
                 )}
             </div>
         </div>
+
+        {/* --- API KEY FALLBACK ENTRY --- */}
+        {showKeyInput && (
+            <div className="mb-6 p-6 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-900 rounded-2xl shadow-lg animate-in slide-in-from-top-4 duration-500">
+                <div className="flex items-center gap-3 mb-4 text-red-700 dark:text-red-400">
+                    <div className="p-2 bg-white dark:bg-slate-900 rounded-lg shadow-sm border border-red-100 dark:border-red-800">
+                        <Key size={20} />
+                    </div>
+                    <div>
+                        <h3 className="text-sm font-black uppercase tracking-wide">API Key Required</h3>
+                        <p className="text-xs opacity-90">The environment variable is missing. Please enter your key manually below to continue.</p>
+                    </div>
+                </div>
+                <div className="flex gap-2">
+                    <input 
+                        type="password" 
+                        value={manualKey}
+                        onChange={(e) => setManualKey(e.target.value)}
+                        placeholder="Paste your Gemini or OpenAI Key here..."
+                        className="flex-grow px-4 py-2 rounded-xl border border-red-200 dark:border-red-800 bg-white dark:bg-slate-950 text-sm focus:ring-2 focus:ring-red-500 outline-none transition-all"
+                    />
+                    <button 
+                        onClick={handleSaveKey}
+                        className="px-6 py-2 bg-red-600 hover:bg-red-700 text-white rounded-xl font-bold text-xs uppercase tracking-wider shadow-lg shadow-red-500/20 transition-all"
+                    >
+                        Save & Reload
+                    </button>
+                </div>
+                <p className="mt-2 text-[10px] text-red-500 dark:text-red-400 italic">
+                    Note: This key will be saved to your browser's Local Storage for this session. It is not uploaded to our servers.
+                </p>
+            </div>
+        )}
 
         {/* ... (AI Analysis Sections) ... */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
