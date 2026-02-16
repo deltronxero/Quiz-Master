@@ -115,6 +115,8 @@ export const SummaryView: React.FC<SummaryViewProps> = ({ answers, onRestart, is
 
   const handleGenerateContextAnalysis = async () => {
     setIsContextLoading(true);
+    // If we've already generated an error or analysis, clear it to re-try
+    setContextualAnalysis(null);
     const analysis = await getAIContextualAnalysis(answers);
     setContextualAnalysis(analysis);
     setIsContextLoading(false);
@@ -417,7 +419,7 @@ export const SummaryView: React.FC<SummaryViewProps> = ({ answers, onRestart, is
                 ) : (
                     <div className="flex-grow max-h-[300px] overflow-y-auto scrollbar-thin scrollbar-thumb-slate-300 dark:scrollbar-thumb-slate-700 pr-2 animate-in fade-in duration-500">
                         <div className="prose prose-sm dark:prose-invert">
-                            <div className="text-[12px] text-slate-600 dark:text-slate-300 leading-relaxed whitespace-pre-wrap font-medium">
+                            <div className={`text-[12px] leading-relaxed whitespace-pre-wrap font-medium ${contextualAnalysis.includes("disabled") || contextualAnalysis.startsWith("Error") ? "text-red-500 dark:text-red-400" : "text-slate-600 dark:text-slate-300"}`}>
                                 {contextualAnalysis}
                             </div>
                         </div>

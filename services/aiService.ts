@@ -10,13 +10,35 @@ export interface AIExplanationResult {
 
 // --- Configuration & Helpers ---
 
-const getGoogleKey = () => process.env.GOOGLE_API_KEY || process.env.API_KEY;
-const getOpenAIKey = () => process.env.OPENAI_API_KEY;
+// Helper to safely access env vars across different bundlers (Vite, Webpack, etc.)
+const getEnv = (key: string): string => {
+  try {
+    // Standard Node/Webpack/Parcel
+    if (typeof process !== 'undefined' && process.env && process.env[key]) {
+      return process.env[key];
+    }
+  } catch (e) { }
+
+  try {
+    // Vite / Modern ESM
+    // @ts-ignore
+    if (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env[key]) {
+      // @ts-ignore
+      return import.meta.env[key];
+    }
+  } catch (e) { }
+
+  return "";
+};
+
+const getGoogleKey = () => getEnv("GOOGLE_API_KEY") || getEnv("API_KEY");
+const getOpenAIKey = () => getEnv("OPENAI_API_KEY");
 
 // Determine active provider based on keys
 const getActiveProvider = () => {
     if (getGoogleKey()) return 'GEMINI';
     if (getOpenAIKey()) return 'OPENAI';
+    console.warn("AI Service: No valid API keys found. Checked GOOGLE_API_KEY, API_KEY, and OPENAI_API_KEY.");
     return null;
 };
 
@@ -279,7 +301,7 @@ export const getAIExplanation = async (question: Question, userAnswer?: string |
     const provider = getActiveProvider();
     
     if (!provider) {
-        return { text: "AI features are disabled. Please configure a valid Google Gemini or OpenAI API Key." };
+        return { text: "AI features are disabled. Please configure a valid Google Gemini or OpenAI API Key in your environment variables." };
     }
 
     try {
@@ -349,15 +371,15 @@ export const getAIContextualAnalysis = async (answers: UserAnswer[]) => {
             confidence: a.confidence
         }));
 
-        if (frictionPoints.length === 0) return null;
+        if (frictionPoints.length === 0) return "No friction points detected. You need to answer some questions incorrectly or with low confidence to generate an analysis.";
 
         if (provider === 'GEMINI') {
             return await geminiDriver.getContextAnalysis(frictionPoints);
         } else {
             return await openAIDriver.getContextAnalysis(frictionPoints);
         }
-    } catch (error) {
+    } catch (error: any) {
         console.error(`${provider} Contextual Analysis Error:`, error);
-        return null;
+        return `Error: ${error.message || "Analysis failed"}`;
     }
 };
