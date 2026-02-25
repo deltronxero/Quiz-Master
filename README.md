@@ -118,7 +118,7 @@ The application prioritizes the following exact column headings (case-insensitiv
 ### 1. Modes of Operation
 
 #### 📤 Bring Your Own Database (BYODB)
-Designed for users with custom question banks, proprietary exam dumps, or students who use **database creation as a study method**.
+Designed for users with custom question banks or students who use **database creation as a study method**.
 *   **The "Builder's Advantage":** Constructing your own database is a highly effective active learning strategy. By manually mapping questions to specific Domains and book locations, you are forced to analyze the *taxonomy* of the subject matter. This process of curation, validation, and metadata tagging promotes deeper encoding and retention than passive quiz-taking.
 *   **Drag-and-Drop Interface:** Simply drop any valid SQLite (`.db`, `.sqlite`) file onto the landing zone.
 *   **Intelligent Schema Mapping:** The application uses a heuristic algorithm to automatically detect columns. It looks for variations like `Question Text`, `Question`, `Body` for the prompt, and `Correct Answer`, `Answer`, `Key` for results. It maps specific metadata columns (`Domain`, `Topic`, `Chapter`) to the internal analytics engine without requiring manual mapping.
@@ -178,7 +178,7 @@ Located in the specific "DevTools" menu (Wrench icon) inside the Quiz view.
 ## ⚠️ Troubleshooting
 
 **App doesn't load after navigating to http://localhost:3000**
-*   Ensure you've entered your Gemini or Chat GPT API key into the .env file
+*   Double check you followed the installation instructions exactly. Please reach out if you are still having trouble - https://www.linkedin.com/in/nickm42/
 
 **"Database is empty" error:**
 *   Ensure your SQLite file has a table.
